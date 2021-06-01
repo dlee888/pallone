@@ -4,6 +4,7 @@ from discord.ext import tasks
 
 import random
 import os
+import asyncio
 
 import reddit
 
@@ -12,6 +13,8 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or('pallone '))
 
 @bot.event
 async def on_ready():
+    asyncio.create_task(reddit.get_submissions('pallone', 100))
+    
     game = discord.Game('"pallone help"')
     await bot.change_presence(status=discord.Status.dnd, activity=game)
     read_memes.start()
@@ -38,7 +41,7 @@ async def sendmeme(ctx):
     embed.set_footer(text=f'{score} upvotes, {comments} comments')
     await ctx.send(file=im, embed=embed)
     
-@tasks.loop(seconds=41)
+@tasks.loop(seconds=69)
 async def read_memes():
     await reddit.get_submissions('pallone', 13)
 

@@ -17,17 +17,20 @@ async def get_submissions(subreddit : str, number : int):
     subreddit = await reddit.subreddit(subreddit)
     async for submission in subreddit.hot(limit=number):
         if submission.id not in already_done:
-            url = submission.url
-            request = urllib.request.Request(
-                url, headers={'User-Agent': 'Mozilla/5.0'})
-            contents = urllib.request.urlopen(request).read()
-            if url.endswith('.png'):
-                with open(f"submissions/{subreddit}/{submission.id}.png", "wb") as f:
-                    f.write(contents)
-            elif url.endswith('.jpg'):
-                with open(f"submissions/{subreddit}/{submission.id}.jpg", "wb") as f:
-                    f.write(contents)
-            already_done.append(submission.id)
+            try:
+                url = submission.url
+                request = urllib.request.Request(
+                    url, headers={'User-Agent': 'Mozilla/5.0'})
+                contents = urllib.request.urlopen(request).read()
+                if url.endswith('.png'):
+                    with open(f"submissions/{subreddit}/{submission.id}.png", "wb") as f:
+                        f.write(contents)
+                elif url.endswith('.jpg'):
+                    with open(f"submissions/{subreddit}/{submission.id}.jpg", "wb") as f:
+                        f.write(contents)
+                already_done.append(submission.id)
+            except Exception as e:
+                print(e)
 
 async def get_info(meme_id : str):
     submission = await reddit.submission(meme_id)
