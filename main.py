@@ -105,7 +105,7 @@ def cleanup_code(content):
     # remove `foo`
     return content.strip('` \n')
 
-@commands.command(pass_context=True, hidden=True)
+@bot.command(pass_context=True, hidden=True)
 async def debug(ctx, *, body: str):
     """Evaluates a code"""
 
