@@ -33,29 +33,32 @@ async def ping(ctx):
     '''Is the bot online?'''
     await ctx.send(f'Pong! Latency = {round(bot.latency * 1000, 3)} ms')
 
-
 @bot.command(name='meme')
 @commands.cooldown(1, 3, commands.BucketType.user)
 async def sendmeme(ctx):
     '''Sends a spicy meme taken from r/Pallone'''
-    meme = random.choice(os.listdir('submissions/pallone'))
-    meme_id = meme[:-4]
-    meme_ext = meme[-4:]
-    title, link, score, comments = await reddit.get_info(meme_id)
-
-    im = discord.File(
-        f'submissions/pallone/{meme}', filename=f'meme{meme_ext}')
-    embed = discord.Embed()
-    embed.title = title
-    embed.url = f'https://www.reddit.com{link}'
-    embed.set_image(url=f'attachment://meme{meme_ext}')
-    embed.set_footer(text=f'{score} upvotes, {comments} comments')
-    await ctx.send(file=im, embed=embed)
-
+    await util.send_random_meme(ctx, 'pallone')
+    
+@bot.command(name='getmeme', aliases=['gm'])
+@commands.cooldown(1, 10, commands.BucketType.user)
+async def getmeme(ctx, subreddit):
+    '''
+    Retrieves a meme from a subreddit of your choice
+    Usage: 
+        For example: `pallone getmeme memes` to get memes from r/memes
+                     `pallone getmeme dankmemes` to get memes from r/dankmemes
+    You can also use the shorthand `pallone gm <subreddit>`
+    '''
+    await ctx.send(f'Reading memes from r/{subreddit}... (This may take a while)')
+    await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
+    if len(os.listdir(f'submissions/{subreddit}')) == 0:
+        await ctx.send('<:wut:859538341853790218> Reading memes failed.')
+        return
+    await util.send_random_meme(ctx, subreddit)
 
 @tasks.loop(seconds=69)
-async def read_memes(trace=False):
-    await reddit.get_submissions('pallone', 13, trace)
+async def read_memes():
+    await reddit.get_submissions('pallone', 13)
 
 
 @bot.event
@@ -63,7 +66,7 @@ async def on_command_error(ctx, exc):
     if type(exc) == commands.errors.BotMissingPermissions:
         await ctx.send(f'The bot is missing permissions.\nThe missing permissions are: {" ".join(exc.missing_perms)}')
     elif type(exc) == commands.errors.MissingRequiredArgument:
-        await ctx.send(f'Missing required argument.\nPlease enter a value for: {exc.param}')
+        await ctx.send(f'Missing required argument.\nPlease enter a value for: `{exc.param}`')
     elif issubclass(type(exc), commands.errors.UserInputError):
         await ctx.send(f'There was an error parsing your argument')
     elif type(exc) == commands.errors.TooManyArguments:
@@ -76,6 +79,7 @@ async def on_command_error(ctx, exc):
     elif type(exc) == commands.errors.MissingPermissions:
         await ctx.send(f'You are missing permissions.\nThe missing permissions are: {" ".join(exc.missing_perms)}')
     else:
+        await ctx.send('<:wut:859538341853790218> Something went wrong.')
         print('Command error found')
 
         etype = type(exc)
