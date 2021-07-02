@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands
-from discord.ext import tasks
 
-import random
 import os
-import asyncio
 import traceback
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from util import misc
 

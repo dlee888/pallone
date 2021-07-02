@@ -1,10 +1,13 @@
 import discord
 
 import os
-import json
 import random
 
-import reddit
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from util import reddit
 
     
 async def send_random_meme(ctx, subreddit):

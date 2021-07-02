@@ -16,8 +16,8 @@ class Memes(commands.Cog):
         self.read_memes.start()
 
     @tasks.loop(seconds=69)
-    async def read_memes():
-        await reddit.get_submissions('pallone', 13)
+    async def read_memes(self):
+        await asyncio.wait_for(reddit.get_submissions('pallone', 13), timeout=21)
 
     @commands.command(name='meme')
     @commands.cooldown(1, 3, commands.BucketType.user)

@@ -2,3 +2,4 @@ __pycache__
 submissions/
 .env
 ffmpeg.exe
+assets/downloads/

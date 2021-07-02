@@ -2,7 +2,6 @@ import asyncpraw
 import urllib
 import os
 
-import util
 
 reddit = asyncpraw.Reddit(
     client_id=os.getenv('CLIENT_ID'),
