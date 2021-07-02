@@ -5,11 +5,11 @@ import os
 import util
 
 reddit = asyncpraw.Reddit(
-    client_id=util.get_var('CLIENT_ID'),
-    client_secret=util.get_var('CLIENT_SECRET'),
+    client_id=os.getenv('CLIENT_ID'),
+    client_secret=os.getenv('CLIENT_SECRET'),
     user_agent="pallone:v0.0.0 (by u/square264)",
-    username=util.get_var('REDDITUSERNAME'),
-    password=util.get_var('PASSWORD'),
+    username=os.getenv('REDDIT_USERNAME'),
+    password=os.getenv('PASSWORD'),
 )
 
 

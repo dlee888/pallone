@@ -6,14 +6,6 @@ import random
 
 import reddit
 
-def get_var(name):
-    try:
-        return os.environ[name]
-    except Exception as e:
-        # print(e)
-        vars = json.load(open('environment.json'))
-        print(name, vars[name])
-        return vars[name]
     
 async def send_random_meme(ctx, subreddit):
     meme = random.choice(os.listdir(f'submissions/{subreddit}'))
