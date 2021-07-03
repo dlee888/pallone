@@ -2,3 +2,4 @@ discord.py
 asyncpraw
 youtube_dl
 python-dotenv
+youtube-search-python
