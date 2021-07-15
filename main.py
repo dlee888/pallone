@@ -35,7 +35,7 @@ async def on_command_error(ctx, exc):
     elif type(exc) == commands.errors.MissingPermissions:
         await ctx.send(f'You are missing permissions.\nThe missing permissions are: {" ".join(exc.missing_perms)}')
     else:
-        await ctx.send('<:wut:859538341853790218> Something went wrong.')
+        await ctx.send(embed=misc.error_embed('Uh Oh', 'Something went wrong.'))
         print('Command error found')
 
         etype = type(exc)
@@ -55,7 +55,7 @@ async def on_command_error(ctx, exc):
         except:
             with open('data/message.txt', 'w') as file:
                 file.write(msg)
-            await error_channel.send(f'Command Error:\n', discord.File('data/message.txt'))
+            await error_channel.send(f'Command Error:\n', file=discord.File('data/message.txt'))
 
 
 bot.add_cog(DJ(bot))

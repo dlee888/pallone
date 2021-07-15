@@ -12,11 +12,11 @@ reddit = asyncpraw.Reddit(
 )
 
 
-async def get_submissions(subreddit: str, number: int, trace=False):
+async def get_submissions(subreddit: str, number: int, trace=False, fresh=True):
     os.makedirs(f'submissions/{subreddit}', exist_ok=True)
     subreddit = await reddit.subreddit(subreddit)
     async for submission in subreddit.hot(limit=number):
-        if submission.id + '.png' in os.listdir(f'submissions/{subreddit}') or submission.id + '.jpg' in os.listdir(f'submissions/{subreddit}'):
+        if fresh and (submission.id + '.png' in os.listdir(f'submissions/{subreddit}') or submission.id + '.jpg' in os.listdir(f'submissions/{subreddit}')):
             break
         try:
             url = submission.url

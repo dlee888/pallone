@@ -7,6 +7,7 @@ import os
 
 from util import util
 from util import reddit
+from util import misc
 
 
 class Memes(commands.Cog):
@@ -35,9 +36,9 @@ class Memes(commands.Cog):
                                         `pallone getmeme dankmemes` to get memes from r/dankmemes
         You can also use the shorthand `pallone gm <subreddit>`
         '''
-        await ctx.send(f'Reading memes from r/{subreddit}... (This may take a while)')
+        await ctx.send(embed=misc.info_embed(f'Reading memes from r/{subreddit}...', '(This may take a while)'))
         await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
         if len(os.listdir(f'submissions/{subreddit}')) == 0:
-            await ctx.send('<:wut:859538341853790218> Reading memes failed.')
+            await ctx.send(embed=misc.error_embed('Reading memes failed.', 'I didn\'t find any memes...'))
             return
         await util.send_random_meme(ctx, subreddit)

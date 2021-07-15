@@ -9,4 +9,6 @@ async def send_cooldown_embed(ctx, cooldown):
 def info_embed(title, description):
     return discord.Embed(title=title, description=description, color=discord.Color.green())
 def error_embed(title, description):
-    return discord.Embed(title=title, description=description, color=discord.Color.red())
+    res = discord.Embed(title=title, description=description, color=discord.Color.red())
+    res.set_thumbnail(url='https://imgur.com/FKXyPgz.png')
+    return res

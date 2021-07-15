@@ -6,6 +6,7 @@ import os
 import youtube_dl
 import random
 import youtubesearchpython as ytsearch
+import time
 
 from util import misc
 
@@ -21,33 +22,96 @@ class MyLogger(object):
         print(msg)
 
 
+class Video:
+
+    def __init__(self, url, path, requester) -> None:
+        self.url = url
+        self.path = path
+        info = ytsearch.Video.getInfo(url, mode=ytsearch.ResultMode.dict)
+        self.thumbnail_url = info['thumbnails'][0]['url']
+        self.title = info['title']
+        self.viewcount = info['viewCount']['text']
+        self.info = info
+        self.requester = requester
+
+    def to_embed(self):
+        embed = misc.info_embed('Now playing', f'[{self.title}]({self.url})')
+        embed.set_thumbnail(url=self.thumbnail_url)
+        # embed.add_field(name='Length', value=video['duration'])
+        embed.set_footer(
+            text=f"{self.viewcount} views. Requested by {self.requester}", icon_url=self.requester.avatar_url)
+        return embed
+
+    def __str__(self) -> str:
+        return f'[{self.title}]({self.url})'
+
+    def play(self, voice):
+        voice.play(discord.FFmpegPCMAudio(self.path))
+
+
+class Queue:
+
+    def __init__(self, voicechannel, boundchannel) -> None:
+        self.videos = []
+        self.vc = voicechannel
+        self.bc = boundchannel
+        self.warned = True
+        self.playing = None
+        self.self_destruct = None
+
+    def top(self):
+        return self.videos[0]
+
+    def pop(self):
+        self.playing = self.videos[0]
+        self.videos.remove(self.videos[0])
+
+    def push(self, video):
+        self.videos.append(video)
+        self.warned = False
+        self.self_destruct = None
+
+    def empty(self):
+        return len(self.videos) == 0
+
+    def __str__(self) -> str:
+        if len(self.videos) == 0:
+            return 'Queue is empty'
+        return '\n'.join([str(vid) for vid in self.videos])
+
+
 class DJ(commands.Cog):
 
     def __init__(self, client) -> None:
         self.client = client
         self.id = 0
         self.queues = {}
-        self.queries = {}
-        self.voicechannels = {}
-        self.bound_channels = {}
         self.refresh_queues.start()
 
     @tasks.loop(seconds=2)
     async def refresh_queues(self):
-        for guild in self.queues.keys():
+        for guild, queue in self.queues.items():
             voice = discord.utils.get(
                 self.client.voice_clients, guild=await self.client.fetch_guild(guild))
 
             if voice is not None and not voice.is_playing() and not voice.is_paused():
-                if len(self.queues[guild]) == 0:
-                    await self.bound_channels[guild].send(embed=misc.info_embed('Queue is empty', 'Add more songs to start playing again.'))
-                    self.queues.pop(guild)
-                    self.queries.pop(guild)
+                if queue.empty():
+                    if not queue.warned:
+                        await queue.bc.send(embed=misc.info_embed('Queue is empty', 'Add more songs to start playing again.'))
+                        queue.warned = True
+                        queue.self_destruct = time.time() + 120
+                    if queue.self_destruct is not None and time.time() > queue.self_destruct:
+                        await voice.disconnect()
+                        self.queues.pop(guild)
+                        member = await (await self.client.fetch_guild(guild)).fetch_member(self.client.user.id)
+                        try:
+                            await member.edit(nick='Pallone Memer')
+                        except discord.Forbidden:
+                            pass
                 else:
-                    await self.bound_channels[guild].send(embed=misc.info_embed('Now playing', self.queries[guild][0]))
-                    voice.play(discord.FFmpegPCMAudio(self.queues[guild][0]))
-                    self.queries[guild].remove(self.queries[guild][0])
-                    self.queues[guild].remove(self.queues[guild][0])
+                    await queue.bc.send(embed=queue.top().to_embed())
+                    queue.top().play(voice)
+                    queue.pop()
 
     async def download_yt(self, url):
         path = f'assets/downloads/{self.id}.mp3'
@@ -64,7 +128,6 @@ class DJ(commands.Cog):
         self.id += 1
         with youtube_dl.YoutubeDL(ydl_format) as ydl:
             ydl.download([url])
-        # print('Done')
         return path
 
     @commands.group(brief='DJ Enzyme', invoke_without_command=True)
@@ -95,8 +158,7 @@ class DJ(commands.Cog):
             voice_channel = ctx.author.voice.channel
 
         await voice_channel.connect()
-        self.voicechannels[ctx.guild.id] = voice_channel
-        self.bound_channels[ctx.guild.id] = ctx.channel
+        self.queues[ctx.guild.id] = Queue(voice_channel, ctx.channel)
         member = await ctx.guild.fetch_member(self.client.user.id)
         try:
             await member.edit(nick='DJ Enzyme')
@@ -118,19 +180,10 @@ class DJ(commands.Cog):
             return
 
         file = await self.download_yt(url)
-        # await ctx.send('Done downloading video.')
 
-        if not voice.is_playing():
-            await ctx.send(embed=misc.info_embed('Now playing', url))
-            voice.play(discord.FFmpegPCMAudio(file))
-        else:
-            if not ctx.guild.id in self.queues.keys():
-                self.queries[ctx.guild.id] = []
-                self.queues[ctx.guild.id] = []
-            self.queues[ctx.guild.id].append(file)
-            self.queries[ctx.guild.id].append(url)
-            await ctx.send(embed=misc.info_embed('Added to queue', f'Song {url} added to queue'))
-            
+        self.queues[ctx.guild.id].videos.append(Video(url, file, ctx.author))
+        await ctx.send(embed=misc.info_embed('Added to queue', f'Song {url} added to queue'))
+
     @dj.command()
     async def search(self, ctx, *, query):
         """Searches for songs on youtube"""
@@ -140,40 +193,31 @@ class DJ(commands.Cog):
         if voice is None:
             await ctx.send(embed=misc.error_embed('DJ Enzyme not connected.', 'Use `pallone dj connect` to connect to a voice channel'))
             return
-        
+
         videosSearch = ytsearch.VideosSearch(query, limit=1)
         result = videosSearch.result()
         video = result['result'][0]
-        print(video)
+
         file = await self.download_yt(video['link'])
-        embed = misc.info_embed(f'''Result: "{video['title']}"''', video['link'])
+        embed = misc.info_embed(
+            f'''Result: "{video['title']}"''', video['link'])
         embed.set_thumbnail(url=video['thumbnails'][0]['url'])
         embed.add_field(name='Length', value=video['duration'])
-        embed.set_footer(text=f"{video['viewCount']['short']}, requested by {ctx.author}", icon_url=ctx.author.avatar_url)
+        embed.set_footer(
+            text=f"{video['viewCount']['short']}, requested by {ctx.author}", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
 
-        if not voice.is_playing():
-            await ctx.send(embed=misc.info_embed('Now playing', video['link']))
-            voice.play(discord.FFmpegPCMAudio(file))
-        else:
-            if not ctx.guild.id in self.queues.keys():
-                self.queries[ctx.guild.id] = []
-                self.queues[ctx.guild.id] = []
-            self.queues[ctx.guild.id].append(file)
-            self.queries[ctx.guild.id].append(video['link'])
-            await ctx.send(embed=misc.info_embed('Added to queue', f'''Song {video['link']} added to queue'''))
+        self.queues[ctx.guild.id].videos.append(
+            Video(video['link'], file, ctx.author))
+        await ctx.send(embed=misc.info_embed('Added to queue', f'''Song {video['link']} added to queue'''))
 
     @ dj.command(aliases=['disconnect', 'dc'])
     async def leave(self, ctx):
         """Disconnects from the vc"""
         voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
-        if voice.is_connected():
+        if voice is not None and voice.is_connected():
             await voice.disconnect()
-            self.voicechannels.pop(ctx.guild.id)
-            if ctx.guild.id in self.queues.keys():
-                self.queues.pop(ctx.guild.id)
-                self.queries.pop(ctx.guild.id)
-            self.bound_channels.pop(ctx.guild.id)
+            self.queues.pop(ctx.guild.id)
             member = await ctx.guild.fetch_member(self.client.user.id)
             try:
                 await member.edit(nick='Pallone Memer')
@@ -212,8 +256,19 @@ class DJ(commands.Cog):
     @dj.command(aliases=['q'])
     async def queue(self, ctx):
         """Sends the queue"""
-        if ctx.guild.id in self.queries.keys():
-            await ctx.send(embed=misc.info_embed('Queue', '\n'.join(self.queries[ctx.guild.id])))
+        if ctx.guild.id in self.queues.keys():
+            await ctx.send(embed=misc.info_embed('Queue', str(self.queues[ctx.guild.id])))
+        else:
+            await ctx.send(embed=misc.error_embed('No queue found', 'There is no queue for this server.'))
+
+    @dj.command(aliases=['np'])
+    async def playing(self, ctx):
+        """Sends the current song playing"""
+        if ctx.guild.id in self.queues.keys():
+            if self.queues[ctx.guild.id].playing is None:
+                await ctx.send(embed=misc.error_embed('Nothing is playing', 'Add more songs to start playing.'))
+            else:
+                await ctx.send(embed=self.queues[ctx.guild.id].playing.to_embed())
         else:
             await ctx.send(embed=misc.error_embed('No queue found', 'There is no queue for this server.'))
 
@@ -221,8 +276,7 @@ class DJ(commands.Cog):
     async def clear(self, ctx):
         """Clears the queue"""
         if ctx.guild.id in self.queries.keys():
-            self.queues.pop(ctx.guild.id)
-            self.queries.pop(ctx.guild.id)
+            self.queues[ctx.guild.id]
             await ctx.send(embed=misc.info_embed('Queue cleared', 'Queue is now empty.'))
         else:
             await ctx.send(embed=misc.error_embed('No queue found', 'There is no queue for this server.'))
@@ -230,8 +284,7 @@ class DJ(commands.Cog):
     @dj.command()
     async def shuffle(self, ctx):
         if ctx.guild.id in self.queries.keys():
-            random.shuffle(self.queues[ctx.guild.id])
-            random.shuffle(self.queries[ctx.guild.id])
-            await ctx.send(embed=misc.info_embed('Queue shuffled', 'Queue:\n' + '\n'.join(self.queries[ctx.guild.id])))
+            random.shuffle(self.queues[ctx.guild.id].videos)
+            await ctx.send(embed=misc.info_embed('Queue shuffled', f'Queue:\n{self.queues[ctx.guild.id]}'))
         else:
             await ctx.send(embed=misc.error_embed('No queue found', 'There is no queue for this server.'))

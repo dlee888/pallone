@@ -1,4 +1,4 @@
-discord.py
+discord.py[voice]
 asyncpraw
 youtube_dl
 python-dotenv
