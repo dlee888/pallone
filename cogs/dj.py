@@ -233,7 +233,7 @@ class DJ(commands.Cog):
         if voice is not None and voice.is_playing():
             voice.pause()
         else:
-            await ctx.send(misc.error_embed('Cannot pause audio', "Currently no audio is playing."))
+            await ctx.send(embed=misc.error_embed('Cannot pause audio', "Currently no audio is playing."))
 
     @ dj.command()
     async def resume(self, ctx):
@@ -242,7 +242,7 @@ class DJ(commands.Cog):
         if voice is not None and voice.is_paused():
             voice.resume()
         else:
-            await ctx.send(misc.error_embed("The audio is not paused", 'Nice try tho'))
+            await ctx.send(embed=misc.error_embed("The audio is not paused", 'Nice try tho'))
 
     @ dj.command(aliases=['skip'])
     async def stop(self, ctx):
@@ -251,7 +251,7 @@ class DJ(commands.Cog):
         if voice is not None:
             voice.stop()
         else:
-            await ctx.send(misc.error_embed("There are no songs playing", 'Next time you try actually add songs to skip.'))
+            await ctx.send(embed=misc.error_embed("There are no songs playing", 'Next time you try actually add some songs.'))
 
     @dj.command(aliases=['q'])
     async def queue(self, ctx):
@@ -268,7 +268,11 @@ class DJ(commands.Cog):
             if self.queues[ctx.guild.id].playing is None:
                 await ctx.send(embed=misc.error_embed('Nothing is playing', 'Add more songs to start playing.'))
             else:
-                await ctx.send(embed=self.queues[ctx.guild.id].playing.to_embed())
+                embed = self.queues[ctx.guild.id].playing.to_embed()
+                voice = discord.utils.get(self.client.voice_clients, guild=ctx.guild)
+                if voice.is_paused():
+                    embed.description += '\n(Song is paused)'
+                await ctx.send(embed=embed)
         else:
             await ctx.send(embed=misc.error_embed('No queue found', 'There is no queue for this server.'))
 
@@ -283,6 +287,7 @@ class DJ(commands.Cog):
 
     @dj.command()
     async def shuffle(self, ctx):
+        """Shuffles the queue"""
         if ctx.guild.id in self.queries.keys():
             random.shuffle(self.queues[ctx.guild.id].videos)
             await ctx.send(embed=misc.info_embed('Queue shuffled', f'Queue:\n{self.queues[ctx.guild.id]}'))

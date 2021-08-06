@@ -1,3 +1,7 @@
+from cogs.misc import Misc
+from cogs.memes import Memes
+from cogs.dj import DJ
+from util import misc
 import discord
 from discord.ext import commands
 
@@ -8,13 +12,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from util import misc
 
-from cogs.dj import DJ
-from cogs.memes import Memes
-from cogs.misc import Misc
+class MyHelpCommand(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        destination = self.get_destination()
+        e = discord.Embed(color=discord.Color.blurple(), description='')
+        for page in self.paginator.pages:
+            e.description += page
+        await destination.send(embed=e)
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or('pallone '))
+
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(
+    'pallone '), case_insensitive=True)
+bot.help_command = MyHelpCommand()
 
 
 @bot.event
