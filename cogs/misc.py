@@ -20,7 +20,7 @@ class Misc(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print('Reading memes...')
-        await reddit.get_submissions('pallone', 20, True)
+        asyncio.create_task(reddit.get_submissions('pallone', 50, trace=True, fresh=False))
 
         game = discord.Game('"pallone help"')
         await self.client.change_presence(status=discord.Status.dnd, activity=game)
