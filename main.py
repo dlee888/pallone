@@ -2,8 +2,11 @@ from cogs.misc import Misc
 from cogs.memes import Memes
 from cogs.dj import DJ
 from util import misc
+
 import discord
 from discord.ext import commands
+
+from discord_slash import SlashCommand
 
 import os
 import traceback
@@ -25,6 +28,7 @@ class MyHelpCommand(commands.MinimalHelpCommand):
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(
     'pallone '), case_insensitive=True)
 bot.help_command = MyHelpCommand()
+slash = SlashCommand(bot, sync_commands=True)
 
 
 @bot.event
