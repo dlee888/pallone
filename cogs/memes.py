@@ -45,7 +45,11 @@ class Memes(commands.Cog):
         You can also use the shorthand `pallone gm <subreddit>`
         '''
         await ctx.send(embed=misc.info_embed(f'Reading memes from r/{subreddit}...', '(This may take a while)'))
-        await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
+        try:
+            await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
+        except Exception:
+            await ctx.send(embed=misc.error_embed('Reading memes failed.', 'I didn\'t find any memes...'))
+            return
         if len(os.listdir(f'submissions/{subreddit}')) == 0:
             await ctx.send(embed=misc.error_embed('Reading memes failed.', 'I didn\'t find any memes...'))
             return
@@ -64,7 +68,11 @@ class Memes(commands.Cog):
         Retrieves a meme from a subreddit of your choice
         '''
         await ctx.send(embed=misc.info_embed(f'Reading memes from r/{subreddit}...', '(This may take a while)'))
-        await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
+        try:
+            await asyncio.wait_for(reddit.get_submissions(subreddit, 69), timeout=9)
+        except Exception:
+            await ctx.send(embed=misc.error_embed('Reading memes failed.', 'I didn\'t find any memes...'))
+            return
         if len(os.listdir(f'submissions/{subreddit}')) == 0:
             await ctx.send(embed=misc.error_embed('Reading memes failed.', 'I didn\'t find any memes...'))
             return
