@@ -3,4 +3,4 @@ asyncpraw
 youtube_dl
 python-dotenv
 youtube-search-python
-discord-py-slash-commands
+discord-py-slash-command

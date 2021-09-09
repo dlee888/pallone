@@ -12,10 +12,16 @@ reddit = asyncpraw.Reddit(
 )
 
 
-async def get_submissions(subreddit: str, number: int, trace=False, fresh=True):
+async def get_submissions(subreddit: str, number: int, trace=False, fresh=True, sub_type='hot'):
     os.makedirs(f'submissions/{subreddit}', exist_ok=True)
-    subreddit = await reddit.subreddit(subreddit)
-    async for submission in subreddit.hot(limit=number):
+    sub = await reddit.subreddit(subreddit)
+    if sub_type == 'hot':
+        gen = sub.hot(limit=number)
+    elif sub_type == 'top':
+        gen = sub.top(limit=number)
+    elif sub_type == 'all':
+        gen = sub.top('all')
+    async for submission in gen:
         if submission.id + '.png' in os.listdir(f'submissions/{subreddit}') or submission.id + '.jpg' in os.listdir(f'submissions/{subreddit}'):
             if fresh:
                 break
