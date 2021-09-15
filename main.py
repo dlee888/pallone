@@ -1,6 +1,8 @@
 from cogs.misc import Misc
 from cogs.memes import Memes
 from cogs.dj import DJ
+from cogs.stonks import Stonks
+
 from util import misc
 
 import discord
@@ -19,7 +21,7 @@ load_dotenv()
 class MyHelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):
         destination = self.get_destination()
-        e = discord.Embed(color=discord.Color.blurple(), description='')
+        e = discord.Embed(title='Help', color=discord.Color.blurple(), description='')
         for page in self.paginator.pages:
             e.description += page
         await destination.send(embed=e)
@@ -75,6 +77,7 @@ async def on_command_error(ctx, exc):
 bot.add_cog(DJ(bot))
 bot.add_cog(Memes(bot))
 bot.add_cog(Misc(bot))
+bot.add_cog(Stonks(bot))
 
 
 if __name__ == "__main__":
