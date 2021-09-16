@@ -1,8 +1,11 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands.core import command
+
+from typing import Union
 
 from util import stonks
+from util.data import data
+from util import misc
 
 class Stonks(commands.Cog):
 
@@ -25,3 +28,14 @@ class Stonks(commands.Cog):
         price = stonks.get_price(company)
         embed.description = f'Price: ${price}'
         await ctx.send(embed=embed)
+
+    @stonks.command()
+    async def balance(self, ctx, person : Union[discord.Member, discord.User] = None):
+        if person is None:
+            person = ctx.author
+        bal = data.get_money(person.id)
+        stonks = data.get_stonks(cperson.id)
+        description = f'Money: `{bal}`\nStonks:\n'
+        for stonk in stonks.values():
+            description += f'`{stonk[0]}`: `{stonk[1]}`\n'
+        await ctx.send(embed=misc.info_embed(f'{person}\'s balance', description))
