@@ -7,6 +7,7 @@ from util import stonks
 from util.data import data
 from util import misc
 
+
 class Stonks(commands.Cog):
 
     def __init__(self, client):
@@ -21,6 +22,7 @@ class Stonks(commands.Cog):
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def price(self, ctx, company):
         """Gets the current price of a stock"""
+        company = company.upper()
         embed = stonks.make_company_embed(company)
         if embed is None:
             await ctx.send(f'Company `{company.upper()}` not found.')
@@ -29,13 +31,46 @@ class Stonks(commands.Cog):
         embed.description = f'Price: ${price}'
         await ctx.send(embed=embed)
 
-    @stonks.command()
-    async def balance(self, ctx, person : Union[discord.Member, discord.User] = None):
+    @stonks.command(aliases=['bal'])
+    async def balance(self, ctx, person: Union[discord.Member, discord.User] = None):
+        """Shows how much money and which stocks you have"""
         if person is None:
             person = ctx.author
         bal = data.get_money(person.id)
-        stonks = data.get_stonks(cperson.id)
-        description = f'Money: `{bal}`\nStonks:\n'
-        for stonk in stonks.values():
-            description += f'`{stonk[0]}`: `{stonk[1]}`\n'
+        if bal is None:
+            if person == ctx.author:
+                data.change_money(person.id, 0)
+                await ctx.send(embed=misc.stonks_intro_embed())
+            else:
+                await ctx.send(embed=misc.info_embed('Person not found', f'{person} has not yet traded any stonks.'))
+            return
+        stonks_owned = data.get_stonks(person.id)
+        net = bal
+        description = f'Money: `{round(bal, 8)}`\nStonks:\n'
+        for stonk in stonks_owned.items():
+            description += f'`{stonk[0]}`: `{round(stonk[1], 8)}` shares\n'
+            net += stonk[1] * stonks.get_price(stonk[0])
+        if len(stonks_owned) == 0:
+            description += 'No stonks owned.\n'
+        description += f'Net worth: `{net}`'
         await ctx.send(embed=misc.info_embed(f'{person}\'s balance', description))
+
+    @stonks.command()
+    @commands.cooldown(1, 5, commands.BucketType.user)
+    async def buy(self, ctx, company, amount: float):
+        """
+        Buys some stonks. 
+        Note: you can buy negative values to sell, your total balance can be negative (you owe money), and you can own a negative amount of stock (sort of like short selling).
+        """
+        if data.get_money(ctx.author.id) is None:
+            data.change_money(ctx.author.id, 0)
+            await ctx.send(embed=misc.stonks_intro_embed())
+            return
+        company = company.upper()
+        price = stonks.get_price(company)
+        if price is None:
+            await ctx.send(embed=misc.error_embed('Company not found', f'Company `{company}` was not found.'))
+            return
+        data.change_money(ctx.author.id, -price * amount)
+        data.change_stonks(ctx.author.id, company, amount)
+        await ctx.send(embed=misc.info_embed('Purchase success', f'{amount} shares of {company} bought for `${price}` per share.'))

@@ -23,7 +23,6 @@ def get_quote(company : str):
 
 def get_profile(company : str):
     json_data = get_response(f'{PROFILE_URL}{company.upper()}?apikey={API_KEY}')
-    print(json_data)
     if len(json_data) == 0:
         return None
     assert(len(json_data) == 1)

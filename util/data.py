@@ -44,6 +44,8 @@ class Data:
 
     def change_money(self, person, amount):
         money = self.get_money(person)
+        if money is None:
+            money = 1000000
         self.exec_command(f'REPLACE INTO money (id, balance) VALUES (?, ?);', (person, amount + money))
 
     def change_stonks(self, person, stonk, amount):
@@ -51,7 +53,7 @@ class Data:
             orig = self.get_stonks(person)[stonk]
         except KeyError:
             orig = 0.0
-        self.exec_command(f'DELETE FROM stonks WHERE stonk = ? and id = ?;', (stonk, person))
-        self.exec_command(f'INSERT INTO stonks (id, stonk, amount) VALUES (?, ?, ?);', (person, stonk, orig + amount))
+        self.exec_command(f'DELETE FROM stonks WHERE company = ? and id = ?;', (stonk, person))
+        self.exec_command(f'INSERT INTO stonks (id, company, amount) VALUES (?, ?, ?);', (person, stonk, orig + amount))
 
 data = Data()

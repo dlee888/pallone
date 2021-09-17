@@ -12,3 +12,7 @@ def error_embed(title, description):
     res = discord.Embed(title=title, description=description, color=discord.Color.red())
     res.set_thumbnail(url='https://imgur.com/FKXyPgz.png')
     return res
+
+def stonks_intro_embed():
+    res = discord.Embed(title='Stonks', description='Welcome to pallone memer\'s stonk trading game!\nYou start out with 1,000,000 dollars.\nUse `pallone help stonks` to see the commands and get started.', color=discord.Color.blurple())
+    return res
