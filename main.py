@@ -13,15 +13,12 @@ from discord_slash import SlashCommand
 import os
 import traceback
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 class MyHelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):
         destination = self.get_destination()
-        e = discord.Embed(title='Help', color=discord.Color.blurple(), description='')
+        e = discord.Embed(
+            title='Help', color=discord.Color.blurple(), description='')
         for page in self.paginator.pages:
             e.description += page
         await destination.send(embed=e)
