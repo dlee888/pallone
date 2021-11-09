@@ -3,3 +3,5 @@ asyncpraw
 youtube_dl
 youtube-search-python
 discord-py-slash-command
+python-dateutils
+matplotlib
