@@ -2,6 +2,7 @@ import discord
 import requests
 import os
 import json
+from dateutil import parser
 
 API_KEY = os.getenv('STONKS_KEY')
 
@@ -38,3 +39,13 @@ def make_company_embed(company: str):
         return None
     res.set_thumbnail(url=profile['image'])
     return res
+
+def get_historical_price(company: str, interval:str = '1min'):
+    json_data = get_response(f'{BASE_URL}historical-chart/{interval}/{company.upper()}?apikey={API_KEY}')
+    times = []
+    prices = []
+    for point in json_data:
+        price_time = parser.parse(point['date'])
+        times.append(price_time.timestamp())
+        prices.append(point['close'])
+    return times, prices
