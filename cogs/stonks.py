@@ -58,7 +58,7 @@ class Stonks(commands.Cog):
         if len(stonks_owned) == 0:
             description = 'No stonks owned.\n'
         embed.add_field(name='Stonks', value=description)
-        embed.add_field(name='Net worth', f'`{net}`')
+        embed.add_field(name='Net worth', value=f'`{net}`')
         await ctx.send(embed=embed)
 
     @stonks.command()
