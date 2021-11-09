@@ -31,7 +31,7 @@ class Stonks(commands.Cog):
         embed.description = f'Price: ${price}'
         filename = f'plot_{ctx.message.id}.png'
         stonks.plot_historical_price(filename, company)
-        embed.set_image(f'attachment://{filename}')
+        embed.set_image(url=f'attachment://{filename}')
         await ctx.send(file=discord.File(filename), embed=embed)
 
     @stonks.command(aliases=['bal'])
