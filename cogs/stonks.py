@@ -49,7 +49,7 @@ class Stonks(commands.Cog):
             return
         stonks_owned = data.get_stonks(person.id)
         net = bal
-        embed = misc.info_embed(f'{person}\'s balance')
+        embed = misc.info_embed(f'{person}\'s balance', '')
         embed.add_field(name='Money', value=f'`{round(bal, 8)}`')
         description = ''
         for stonk in stonks_owned.items():
