@@ -54,5 +54,5 @@ def get_historical_price(company: str, interval: str = '1min'):
 def plot_historical_price(filename: str, company: str, interval: str = '1min'):
     times, prices = get_historical_price(company, interval)
     plt.cla()
-    plt.plot(times, prices)
+    plt.plot(times[:100], prices[:100])
     plt.savefig(filename)
