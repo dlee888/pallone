@@ -29,7 +29,10 @@ class Stonks(commands.Cog):
             return
         price = stonks.get_price(company)
         embed.description = f'Price: ${price}'
-        await ctx.send(embed=embed)
+        filename = f'plot_{ctx.message.id}.png'
+        stonks.plot_historical_price(filename, company)
+        embed.set_image(f'attachment://{filename}')
+        await ctx.send(file=discord.File(filename), embed=embed)
 
     @stonks.command(aliases=['bal'])
     async def balance(self, ctx, person: Union[discord.Member, discord.User] = None):
@@ -46,14 +49,17 @@ class Stonks(commands.Cog):
             return
         stonks_owned = data.get_stonks(person.id)
         net = bal
-        description = f'Money: `{round(bal, 8)}`\nStonks:\n'
+        embed = misc.info_embed(f'{person}\'s balance')
+        embed.add_field(name='Money', value=f'`{round(bal, 8)}`')
+        description = ''
         for stonk in stonks_owned.items():
             description += f'`{stonk[0]}`: `{round(stonk[1], 8)}` shares\n'
             net += stonk[1] * stonks.get_price(stonk[0])
         if len(stonks_owned) == 0:
-            description += 'No stonks owned.\n'
-        description += f'Net worth: `{net}`'
-        await ctx.send(embed=misc.info_embed(f'{person}\'s balance', description))
+            description = 'No stonks owned.\n'
+        embed.add_field(name='Stonks', value=description)
+        embed.add_field(name='Net worth', f'`{net}`')
+        await ctx.send(embed=embed)
 
     @stonks.command()
     @commands.cooldown(1, 5, commands.BucketType.user)
