@@ -3,6 +3,7 @@ import requests
 import os
 import json
 from dateutil import parser
+import matplotlib.pyplot as plt
 
 API_KEY = os.getenv('STONKS_KEY')
 
@@ -40,7 +41,7 @@ def make_company_embed(company: str):
     res.set_thumbnail(url=profile['image'])
     return res
 
-def get_historical_price(company: str, interval:str = '1min'):
+def get_historical_price(company: str, interval: str = '1min'):
     json_data = get_response(f'{BASE_URL}historical-chart/{interval}/{company.upper()}?apikey={API_KEY}')
     times = []
     prices = []
@@ -49,3 +50,8 @@ def get_historical_price(company: str, interval:str = '1min'):
         times.append(price_time.timestamp())
         prices.append(point['close'])
     return times, prices
+
+def plot_historical_price(filename: str, company: str, interval: str = '1min'):
+    times, prices = get_historical_price(company, interval)
+    plt.plot(times, prices)
+    plt.savefig(filename)
