@@ -92,3 +92,15 @@ class Misc(commands.Cog):
                     await ctx.send(f'```py\n{value}\n```')
             else:
                 await ctx.send(f'```py\n{value}{ret}\n```')
+
+    @commands.command(hidden=True)
+    async def kill(self, ctx):
+        if ctx.author.id == 716070916550819860:
+            await ctx.send('Dying...')
+            os._exit(69)
+
+    @commands.command(hidden=True)
+    async def restart(self, ctx):
+        if ctx.author.id == 716070916550819860:
+            await ctx.send('Restarting...')
+            os._exit(0)

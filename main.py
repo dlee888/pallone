@@ -12,6 +12,8 @@ from discord_slash import SlashCommand
 
 import os
 import traceback
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 
 class MyHelpCommand(commands.MinimalHelpCommand):
@@ -76,6 +78,12 @@ bot.add_cog(Memes(bot))
 bot.add_cog(Misc(bot))
 bot.add_cog(Stonks(bot))
 
-
+# logging to console and file on daily interval
+os.makedirs('data/logs', exist_ok=True)
+logging.basicConfig(format='{asctime}:{levelname}:{name}:{message}', style='{',
+                    datefmt='%d-%m-%Y %H:%M:%S', level=logging.INFO,
+                    handlers=[logging.StreamHandler(),
+                                TimedRotatingFileHandler('data/logs/pallone.log', when='D',
+                                                        backupCount=3, utc=True)])
 if __name__ == "__main__":
     bot.run(os.getenv('PALLONE_TOKEN'))

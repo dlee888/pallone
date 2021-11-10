@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 
+import os
 from typing import Union
 
 from util import stonks
@@ -29,9 +30,10 @@ class Stonks(commands.Cog):
             return
         price = stonks.get_price(company)
         embed.description = f'Price: ${price}'
-        filename = f'plot_{ctx.message.id}.png'
+        os.makedirs('temp/plots', exist_ok=True)
+        filename = f'temp/plots/plot_{ctx.message.id}.png'
         stonks.plot_historical_price(filename, company)
-        embed.set_image(url=f'attachment://{filename}')
+        embed.set_image(url=f'attachment://plot_{ctx.message.id}.png')
         await ctx.send(file=discord.File(filename), embed=embed)
 
     @stonks.command(aliases=['bal'])
