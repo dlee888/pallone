@@ -55,4 +55,8 @@ def plot_historical_price(filename: str, company: str, interval: str = '1min'):
     times, prices = get_historical_price(company, interval)
     plt.cla()
     plt.plot(times[:100], prices[:100])
+    axes = plt.gca()
+    y_min, y_max = axes.get_ylim()
+    if y_max - y_min <= 5:
+        axes.set_ylim([y_max - 5, y_max + 1])
     plt.savefig(filename)
