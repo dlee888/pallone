@@ -1,8 +1,6 @@
 import discord
 from discord.ext import commands
 
-from discord_slash import SlashContext
-from discord_slash import cog_ext
 
 import asyncio
 import os
@@ -32,10 +30,6 @@ class Misc(commands.Cog):
 
     @commands.command()
     async def ping(self, ctx):
-        '''Is the bot online?'''
-        await ctx.send(f'Pong! Latency = {round(self.client.latency * 1000, 3)} ms')
-    @cog_ext.cog_slash(name='ping')
-    async def _ping(self, ctx : SlashContext):
         '''Is the bot online?'''
         await ctx.send(f'Pong! Latency = {round(self.client.latency * 1000, 3)} ms')
         

@@ -3,13 +3,9 @@ import discord
 import os
 import random
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from util import reddit
 
-    
+
 async def send_random_meme(ctx, subreddit):
     meme = random.choice(os.listdir(f'submissions/{subreddit}'))
     meme_id = meme[:-4]
